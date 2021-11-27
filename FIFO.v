@@ -14,10 +14,10 @@
 // Dependencies:
 // Revision:
 // Revision 0.01 - File Created
-// 完成基本框架
+// Revision 1.00 - 完成基本框架
+// Revision 2.00 - 根据书上的说法，建立了FIFO_R和FIFO_W两个有限向量机用于处理地址
 // 目前的问题：
-// 1. 是否用状态机？
-// 2. 如何保证head和tail的改变不会导致需要输出的数据出错？
+// 目前用的二进制码读写数据，等处理结束，可以引入格雷码
 // Additional Comments:
 //
 // 
@@ -38,39 +38,50 @@ module FIFO #(
     output Empty,
     output reg [N-1:0] data_o
 );
-/*
-    localparam EMPTY = 0;
-    localparam FULL = 1;
-    localparam NORMAL = 2;
-*/
-    localparam M = 2**DEEP;
-    reg [N-1:0] ROM [M-1:0];//一个8位，深度为8的ROM
-    reg [DEEP:0] head=0;
-    reg [DEEP:0] tail=0;
-    reg [N-1:0] data_head;
-    reg [N-1:0] data_tail;
+    wire [DEEP:0] head=0;
+    wire [DEEP:0] tail=0;
+    wire pop;
+    wire push;
 
-    always @(posedge arst or posedge clk_out) begin
-        if (arst)
-            head=0;
-        else if (w_en && Empty==0)
-        begin
-            data_o=ROM[head];
-            head=head-1;
-        end
-    end
+    FIFO_r#
+    (
+        .DEEP(DEEP)
+    )
+    u_FIFO_r(
+        .clk(clk_o),
+        .Empty(Empty),
+        .en(r_en),
+        .pop(pop),
+        .address(head)
+    );
 
-    always @(posedge arst or posedge clk_in) begin
-        if (arst)
-            tail=0;
-        else if (r_en && Full==0)
-        begin
-            ROM[tail]=data_in;
-            tail=tail+1;
-        end
-    end
+    FIFO_w#
+    (
+        .DEEP(DEEP)
+    )
+    u_FIFO_w(
+        .clk(clk_in),
+        .Full(Full),
+        .en(w_en),
+        .push(push),
+        .address(tail)
+    );
 
+    Memory #(
+        .N(N),//数据为8位
+        .DEEP(DEEP)//memory的深度
+    ) 
+    u_MEM(
+    .data_in(data_in),
+    .address_w(tail),
+    .address_w(head),
+    .w_en(push),
+    .r_en(pop),
+    .clk_in(clk_in),
+    .clk_o(clk_o),
 
+    .data_o(data_o)
+);
     assign  Full= (head[N-1:0]==tail[N-1:0]) && (head[N]==tail[N]);//full是head和tail的首位相反,其他的都相同（恰好是deep的长度）
     assign  Empty= (head==tail);
 endmodule
