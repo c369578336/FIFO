@@ -51,6 +51,7 @@ module FIFO #(
         .clk(clk_o),
         .Empty(Empty),
         .en(r_en),
+        .arst(arst),
         .pop(pop),
         .address(head)
     );
@@ -63,6 +64,7 @@ module FIFO #(
         .clk(clk_in),
         .Full(Full),
         .en(w_en),
+        .arst(arst),
         .push(push),
         .address(tail)
     );

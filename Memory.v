@@ -38,12 +38,12 @@ module Memory #(
 
     always @(posedge clk_in) begin
         if (w_en)
-            ROM[address]=data_in;
+            ROM[address_w]=data_in;
     end
 
     always @(posedge clk_o) begin
         if (r_en)
-            data_o=ROM[address];
+            data_o=ROM[address_r];
     end
 
 endmodule

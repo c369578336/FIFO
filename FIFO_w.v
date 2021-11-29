@@ -25,15 +25,16 @@
 */
 
 module FIFO_w #(
-    parameter DEEP=8//memory的深度
-)(
-    input clk,
-    input Full,
-    input en,
-
-    output push,
-    output reg [DEEP-1:0] address
-);
+        parameter DEEP=8//memory的深度
+    )(
+        input clk,
+        input Full,
+        input en,
+        input arst,
+        
+        output push,
+        output reg [DEEP-1:0] address
+    );
     localparam WAIT = 0;
     localparam FULL = 1;
     localparam PUSH = 2;
@@ -44,38 +45,38 @@ module FIFO_w #(
     always @(*) begin
         case (state)
             WAIT:
-            if (Full)
-                next_state = FULL;
-            else if (!en)
-                next_state = WAIT;
-            else
-                next_state = PUSH;
-            end
+                if (Full)
+                    next_state = FULL;
+                else if (!en)
+                    next_state = WAIT;
+                else
+                    next_state = PUSH;
 
             FULL:
-            if (Full)
-                next_state =FULL;
-            else if (en)
-                next_state = PUSH;
-            else next_state = WAIT;
-            
+                if (Full)
+                    next_state =FULL;
+                else if (en)
+                    next_state = PUSH;
+                else
+                    next_state = WAIT;
+
             PUSH:
-            if (Full)
-                next_state = FULL;
-            else if(en) begin
-                next_state = PUSH;
-            else
-                next_state = WAIT;
-            default: next_state=WAIT;
+                if (Full)
+                    next_state = FULL;
+                else if(en)
+                    next_state = PUSH;
+                else
+                    next_state = WAIT;
+            default:
+                next_state=WAIT;
         endcase
     end
 
     always @(posedge clk or posedge arst) begin
-        if (arst)
-            begin
-                state=WAIT;
-                address=0;
-            end
+        if (arst) begin
+            state=WAIT;
+            address=0;
+        end
         else begin
             state=next_state;
             address=address+1;
@@ -83,4 +84,4 @@ module FIFO_w #(
     end
 
     assign push=state==PUSH;
-endcase
+endmodule
