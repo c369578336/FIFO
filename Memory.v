@@ -36,12 +36,12 @@ module Memory #(
     localparam M = 2**DEEP;
     reg [N-1:0] ROM [M-1:0];//一个8位，深度为8的ROM
 
-    always @(posedge clk_in) begin
+    always @(negedge clk_in) begin
         if (w_en)
             ROM[address_w]=data_in;
     end
 
-    always @(posedge clk_o) begin
+    always @(negedge clk_o) begin
         if (r_en)
             data_o=ROM[address_r];
     end
