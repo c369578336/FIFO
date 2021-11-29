@@ -33,7 +33,7 @@ module FIFO_r #(
         input arst,
         
         output pop,
-        output reg [DEEP-1:0] address
+        output reg [DEEP:0] address
     );
     localparam WAIT = 0;
     localparam EMPTY = 1;
@@ -79,7 +79,8 @@ module FIFO_r #(
         end
         else begin
             state=next_state;
-            address=address+1;
+            if (state!=Empty)
+                address=address+1;
         end
     end
 
