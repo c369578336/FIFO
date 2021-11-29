@@ -73,10 +73,18 @@ module FIFO_w #(
     end
 
     always @(posedge clk or posedge arst) begin
+<<<<<<< HEAD
         if (arst) begin
             state=WAIT;
             address=0;
         end
+=======
+        if (arst)
+            begin
+                state=WAIT;
+                address=0;
+            end
+>>>>>>> 3a14b79e090d7410c586e7b7f35fa1de61cce693
         else begin
             state=next_state;
             address=address+1;
@@ -84,4 +92,8 @@ module FIFO_w #(
     end
 
     assign push=state==PUSH;
+<<<<<<< HEAD
 endmodule
+=======
+endcase
+>>>>>>> 3a14b79e090d7410c586e7b7f35fa1de61cce693
