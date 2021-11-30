@@ -79,7 +79,7 @@ module FIFO_r #(
         end
         else begin
             state=next_state;
-            if (state!=Empty)
+            if (state==POP)
                 address=address+1;
         end
     end

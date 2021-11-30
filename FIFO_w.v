@@ -79,7 +79,7 @@ module FIFO_w #(
         end
         else begin
             state=next_state;
-            if (state!=Full)
+            if (state==PUSH)
                 address=address+1;
         end
     end
