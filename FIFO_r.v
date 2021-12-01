@@ -28,61 +28,34 @@ module FIFO_r #(
         parameter DEEP=8//memory的深度
     )(
         input clk,
-        input Empty,
         input en,
         input arst,
-        
+        input [DEEP:0] address_w,
+
+        output Empty,
         output pop,
-        output reg [DEEP:0] address
+        output [DEEP:0] address_r
     );
-    localparam WAIT = 0;
-    localparam EMPTY = 1;
-    localparam POP = 2;
-
-    reg [1:0] state;
-    reg [1:0] next_state;
-
-    always @(*) begin
-        case (state)
-            WAIT:
-                if (Empty)
-                    next_state = EMPTY;
-                else if (!en)
-                    next_state = WAIT;
-                else
-                    next_state = POP;
-
-            EMPTY:
-                if (Empty)
-                    next_state = Empty;
-                else if (en)
-                    next_state = POP;
-                else
-                    next_state = WAIT;
-
-            POP:
-                if (Empty)
-                    next_state = EMPTY;
-                else if(en)
-                    next_state = POP;
-                else
-                    next_state = WAIT;
-            default:
-                next_state=WAIT;
-        endcase
-    end
-
+    reg [DEEP:0] address;
     always @(posedge clk or posedge arst) begin
         if (arst) begin
-            state=WAIT;
             address=0;
         end
         else begin
-            state=next_state;
-            if (state==POP)
-                address=address+1;
+            if (pop)
+            address=address+1;
         end
     end
 
-    assign pop=state==POP;
+        Gray #(
+        .N(DEEP+1)
+    ) 
+    Gray_r
+    (
+        .Bin(address),
+        .GrayBin(address_r)
+    );
+
+    assign Empty = (address_w==address_r);
+    assign pop=en && !Empty && !arst;   
 endmodule

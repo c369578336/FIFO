@@ -3,29 +3,34 @@
 // Company:
 // Engineer: 尘世
 //
-// Create Date: 2021/11/24  19�?30�?
+// Create Date: 2021/11/24  19�??30�??
 // Design Name: FIFO
 // Module Name: FIFO
 // Project Name: FIFO
 // Target Devices:
 // Tool Versions:
 // Description:
-// 利用格雷码编写地�?的先进先出模�?
+// 利用格雷码编写地�??的先进先出模�??
 // Dependencies:
 // Revision:
 // Revision 0.01 - File Created
 // Revision 1.00 - 完成基本框架
-// Revision 2.00 - 根据书上的说法，建立了FIFO_R和FIFO_W两个有限向量机用于处理地�?
-// 目前的问题：
-// 目前是先+1后写入，会导致如果不读取的话，第一个数据会出错(head=f0，tail=00，但此时会认为已经FULL其实还差一个f0)
+// Revision 2.00 - 根据书上的说法，建立了FIFO_R和FIFO_W两个有限向量机用于处理
+// Revision 3.00 - 完成了初步的FIFO。
+// Revision 4.00 - 根据资料内容对FIFO进行完善。
+// Revision 5.00 - 完成FIFO
+// Revision 5.30 - 加入双寄存器
+// Revision 5.50 - 加入格雷码
 // Additional Comments:
-//
-// 
+// 目前还有一点小问题：
+// full下读取数据，会等一拍full才会消失
+// 可能是由于写入的数据传过来需要经过双寄存器导致的。
+// 但是下一次读取的时钟来的时候，full已经消失。
 //////////////////////////////////////////////////////////////////////////////////
 
 module FIFO #(
-    parameter N=8,//数据�?8�?
-    parameter DEEP=8//memory的深�?
+    parameter N=8,//数据�??8�??
+    parameter DEEP=8//memory的深�??
 ) (
     input [N-1:0] data_in,
     input clk_in,
@@ -38,22 +43,25 @@ module FIFO #(
     output Empty,
     output [N-1:0] data_o
 );
-    wire [DEEP:0] head;
-    wire [DEEP:0] tail;
+    wire [DEEP:0] address_w;
+    wire [DEEP:0] address_r;
     wire pop;
     wire push;
-
+    wire [DEEP:0] Q_r;
+    wire [DEEP:0] Q_w;
     FIFO_r#
     (
         .DEEP(DEEP)
     )
     u_FIFO_r(
         .clk(clk_out),
-        .Empty(Empty),
+        .address_w(Q_w),
         .en(r_en),
         .arst(arst),
         .pop(pop),
-        .address(head)
+
+        .Empty(Empty),
+        .address_r(address_r)
     );
 
     FIFO_w#
@@ -62,28 +70,50 @@ module FIFO #(
     )
     u_FIFO_w(
         .clk(clk_in),
-        .Full(Full),
+        .address_r(Q_r),
         .en(w_en),
         .arst(arst),
         .push(push),
-        .address(tail)
+
+        .Full(Full),
+        .address_w(address_w)
+    );
+
+    DTigger#
+    (
+        .N(DEEP+1)
+    )
+    uDT_r(
+        .clk(clk_out),
+        .D(address_r),
+        .Q(Q_r)
+    );
+
+    DTigger#
+    (
+        .N(DEEP+1)
+    )
+    uDT_w(
+        .clk(clk_in),
+        .D(address_w),
+        .Q(Q_w)
     );
 
     Memory #(
-        .N(N),//数据�?8�?
-        .DEEP(DEEP)//memory的深�?
+        .N(N),//数据�??8�??
+        .DEEP(DEEP)//memory的深�??
     ) 
     u_MEM(
     .data_in(data_in),
-    .address_w(tail[DEEP-1:0]),
-    .address_r(head[DEEP-1:0]),
+    .address_w(address_w),
+    .address_r(address_r),
     .w_en(push),
     .r_en(pop),
     .clk_in(clk_in),
-    .clk_o(clk_out),
-
+    .clk_out(clk_out),
+    .arst(arst),
+    
     .data_o(data_o)
 );
-    assign  Full= (head[DEEP-1:0]==tail[DEEP-1:0]) && (head[DEEP]!=tail[DEEP]);//full是head和tail的首位相�?,其他的都相同（恰好是deep的长度）
-    assign  Empty= (head==tail);
+
 endmodule

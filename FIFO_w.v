@@ -28,61 +28,35 @@ module FIFO_w #(
         parameter DEEP=8//memory的深度
     )(
         input clk,
-        input Full,
         input en,
         input arst,
+        input [DEEP:0] address_r,
         
         output push,
-        output reg [DEEP:0] address
+        output Full,
+        output [DEEP:0] address_w
     );
-    localparam WAIT = 0;
-    localparam FULL = 1;
-    localparam PUSH = 2;
-
-    reg [1:0] state;
-    reg [1:0] next_state;
-
-    always @(*) begin
-        case (state)
-            WAIT:
-                if (Full)
-                    next_state = FULL;
-                else if (!en)
-                    next_state = WAIT;
-                else
-                    next_state = PUSH;
-
-            FULL:
-                if (Full)
-                    next_state =FULL;
-                else if (en)
-                    next_state = PUSH;
-                else
-                    next_state = WAIT;
-
-            PUSH:
-                if (Full)
-                    next_state = FULL;
-                else if(en)
-                    next_state = PUSH;
-                else
-                    next_state = WAIT;
-            default:
-                next_state=WAIT;
-        endcase
-    end
+    reg [DEEP:0] address;
 
     always @(posedge clk or posedge arst) begin
         if (arst) begin
-            state=WAIT;
             address=0;
         end
         else begin
-            state=next_state;
-            if (state==PUSH)
-                address=address+1;
+            if (push)
+            address=address+1;
         end
     end
 
-    assign push=state==PUSH;
+    Gray #(
+        .N(DEEP+1)
+    ) 
+    Gray_w
+    (
+        .Bin(address),
+        .GrayBin(address_w)
+    );
+
+    assign Full = (address_w[DEEP-2:0]==address_r[DEEP-2:0]) && (address_r[DEEP:DEEP-1]==~(address_w[DEEP:DEEP-1]));
+    assign push=en && !Full && !arst;
 endmodule
