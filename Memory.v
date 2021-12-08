@@ -34,7 +34,7 @@ module Memory #(
 
         output reg [N-1:0] data_o
     );
-    localparam M = 2**DEEP;
+    localparam M = 1<<DEEP;
     reg [N-1:0] ROM [M-1:0];//一个8位，深度为8的ROM
     reg [N-1:0] address;
     always @(posedge clk_in) begin
